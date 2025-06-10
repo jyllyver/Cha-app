@@ -1,4 +1,13 @@
+# Cha App 🚀
 
-# Cha-app
+A Vite + React project created by jyllyver.
 
-# React + Vite
+## Features
+- React Router
+- useState, useEffect
+- Clean Vite setup
+
+## Getting Started
+```bash
+npm install
+npm run dev

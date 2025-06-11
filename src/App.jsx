@@ -5,6 +5,8 @@ const CameraCapture = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [image, setImage] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [responseMsg, setResponseMsg] = useState('');
 
   useEffect(() => {
     // Access camera
@@ -29,7 +31,34 @@ const CameraCapture = () => {
       ctx.drawImage(video, 0, 0);
       const imageData = canvas.toDataURL('image/png');
       setImage(imageData);
+      setResponseMsg('');
     }
+  };
+
+  const sendToAPI = async () => {
+    if (!image) return;
+    setSending(true);
+    setResponseMsg('');
+
+    // Convert base64 to Blob
+    const blob = await (await fetch(image)).blob();
+    const formData = new FormData();
+    formData.append('image', blob, 'captured.png');
+
+    try {
+      const response = await fetch('http://192.168.1.17:5000/upload_image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      setResponseMsg(`Response: ${JSON.stringify(result)}`);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setResponseMsg('Upload failed.');
+    }
+
+    setSending(false);
   };
 
   return (
@@ -38,10 +67,16 @@ const CameraCapture = () => {
       <br />
       <button onClick={capturePhoto}>Capture</button>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+
       {image && (
         <div>
           <h3>Captured Image:</h3>
           <img src={image} alt="Captured" style={{ width: '100%', maxWidth: '400px' }} />
+          <br />
+          <button onClick={sendToAPI} disabled={sending}>
+            {sending ? 'Sending...' : 'Send to API'}
+          </button>
+          <p>{responseMsg}</p>
         </div>
       )}
     </div>
